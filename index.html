@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mogo的个人简介</title>
+  <style>
+    :root {
+      --bg-color: rgba(10,10,10,0.75);
+      --fg-color: #f1f1f1;
+      --panel-bg: rgba(255, 255, 255, 0.08);
+      --textarea-bg: rgba(255, 255, 255, 0.10);
+      --accent: #66cc99;
+    }
+
+    body.light {
+      --bg-color: rgba(255,255,255,0.75);
+      --fg-color: #111;
+      --panel-bg: rgba(255, 255, 255, 0.85);
+      --textarea-bg: rgba(255, 255, 255, 0.95);
+      --accent: #66cc99;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--fg-color);
+      background: var(--bg-color);
+      transition: background 0.3s, color 0.3s;
+      position: relative;
+      z-index: 0;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url('https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      z-index: -2;
+      filter: blur(12px) brightness(0.6);
+    }
+
+    body.light::before {
+      filter: blur(12px) brightness(1);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: var(--panel-bg);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.05);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .theme-toggle {
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+
+    .theme-toggle button {
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    #preview {
+      background: var(--textarea-bg);
+      padding: 1.5rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      line-height: 1.7;
+    }
+
+    #preview h1, #preview h2, #preview h3 {
+      color: var(--accent);
+    }
+
+    #preview a {
+      color: var(--accent);
+      text-decoration: underline; /* 添加下划线 */
+    }
+
+    #preview a::before {
+      content: "🔗";
+      margin-right: 0.25em;
+      font-size: 0.9em;
+      vertical-align: middle;
+    }
+
+    img.avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+      margin-bottom: 1.5rem;
+    }
+
+    .rain {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .rain::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.07),
+          rgba(255, 255, 255, 0.07) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+      animation: rain-fall 0.5s linear infinite;
+    }
+
+    @keyframes rain-fall {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    @keyframes jelly {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.2, 0.8); }
+      50% { transform: scale(0.9, 1.1); }
+      70% { transform: scale(1.05, 0.95); }
+      100% { transform: scale(1); }
+    }
+
+    .jelly {
+      animation: jelly 0.5s ease;
+      display: inline-block;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      .container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="rain"></div>
+
+  <div class="container">
+    <div class="theme-toggle">
+      <button onclick="toggleTheme()">🌓 切换主题</button>
+      <label style="margin-left: 1rem; font-size: 0.9rem;">
+        🎨 主题色：
+        <input type="color" id="colorPicker" value="#66cc99" style="vertical-align: middle;" />
+      </label>
+    </div>
+
+    <h1 id="typing-title">Mogo简介</h1>
+
+    <div style="text-align: center;">
+      <img src="https://images.cnblogs.com/cnblogs_com/blogs/720650/galleries/2280396/o_240730030505_20240208122310312.jpg"
+           alt="头像" class="avatar">
+    </div>
+
+    <div id="preview"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const preview = document.getElementById('preview');
+    const markdownContent = `
+## Momo Traceの简介
+[Moxan网站集](https://nev.moxan.top)
+
+### 个人前端开发者，[网易云音乐人](https://music.163.com/#/user/home?id=2011267708)，电子音乐爱好者[(我的歌单)](https://music.163.com/#/playlist?id=8170701761)...
+
+### what i play is：
+1. MC
+2. Zelda
+3. 王牌竞速
+4. 逆水寒
+5. 明日之后
+6. 欧卡
+7. 地平线
+8. …
+
+### how to connect me
+1. ☎️ +86 190-3365-8425
+2. QQ 1610737346
+3. 📧 trace@moxan.top  
+   13996291218@139.com  
+   traceyyds@gmail.com
+4. discord：momotrace
+5. [github](https://github.com/momotrace)
+`;
+
+    function renderMarkdown() {
+      preview.innerHTML = marked.parse(markdownContent);
+    }
+
+    renderMarkdown();
+
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
+    function applyInitialTheme() {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') {
+        document.body.classList.add('light');
+      } else if (saved === 'dark') {
+        document.body.classList.remove('light');
+      } else {
+        const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        if (prefersLight) document.body.classList.add('light');
+      }
+    }
+
+    applyInitialTheme();
+
+    const titleEl = document.getElementById('typing-title');
+    const fullText = 'Mogo简介';
+    let index = 0;
+
+    function typeWriter() {
+      if (index <= fullText.length) {
+        titleEl.textContent = fullText.slice(0, index++);
+        titleEl.classList.remove('jelly');
+        void titleEl.offsetWidth;
+        titleEl.classList.add('jelly');
+        setTimeout(typeWriter, 150);
+      }
+    }
+
+    setTimeout(typeWriter, 300);
+
+    const colorPicker = document.getElementById('colorPicker');
+    const rootStyle = document.documentElement.style;
+
+    function setAccent(color) {
+      rootStyle.setProperty('--accent', color);
+      localStorage.setItem('accent', color);
+    }
+
+    const savedAccent = localStorage.getItem('accent');
+    if (savedAccent) {
+      colorPicker.value = savedAccent;
+      setAccent(savedAccent);
+    }
+
+    colorPicker.addEventListener('input', (e) => {
+      setAccent(e.target.value);
+    });
+  </script>
+</body>
+</html>
