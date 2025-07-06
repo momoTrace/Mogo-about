@@ -188,6 +188,58 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div style="max-width: 600px; margin: 2rem auto;">
+  <canvas id="stackChart"></canvas>
+</div>
+
+<script>
+const ctx = document.getElementById('stackChart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'radar',
+  data: {
+    labels: ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TailwindCSS', 'TypeScript', 'Git', 'Webpack'],
+    datasets: [{
+      label: 'Mogo 技术熟练度',
+      data: [9, 8, 7, 7, 8, 6, 8, 6],
+      backgroundColor: 'rgba(102, 204, 153, 0.2)', // 默认淡绿色
+      borderColor: 'rgba(102, 204, 153, 1)',
+      borderWidth: 2,
+      pointBackgroundColor: 'rgba(102, 204, 153, 1)',
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      r: {
+        angleLines: { display: false },
+        suggestedMin: 0,
+        suggestedMax: 10,
+        ticks: {
+          stepSize: 2,
+          backdropColor: 'transparent',
+          color: getComputedStyle(document.documentElement).getPropertyValue('--fg-color')
+        },
+        pointLabels: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--fg-color')
+        },
+        grid: {
+          color: 'rgba(200,200,200,0.2)'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: getComputedStyle(document.documentElement).getPropertyValue('--fg-color')
+        }
+      }
+    }
+  }
+});
+                        </script>
   <script>
     const preview = document.getElementById('preview');
     const markdownContent = `
