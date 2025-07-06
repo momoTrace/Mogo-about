@@ -26,6 +26,7 @@
 
 ```bash
 git clone https://github.com/你的用户名/你的仓库名.git
+```
 
 2. 打开 index.html 即可在浏览器查看效果
 
