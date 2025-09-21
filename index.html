@@ -1,247 +1,162 @@
-<!DOCTYPE html>
-<html lang="zh">
+<!DOCTYPE html><html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mogo的个人简介</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mogo 的个人简介 — 优化版</title>
   <style>
-    :root {
-      --bg-color: rgba(10,10,10,0.75);
+    /* ---------- 主题变量（统一放在 :root，便于 JS 与 Chart.js 读取） ---------- */
+    :root{
+      --bg-color: rgba(10,10,10,0.78);
       --fg-color: #f1f1f1;
-      --panel-bg: rgba(255, 255, 255, 0.08);
-      --textarea-bg: rgba(255, 255, 255, 0.10);
+      --panel-bg: rgba(255,255,255,0.06);
+      --textarea-bg: rgba(255,255,255,0.06);
       --accent: #66cc99;
-    }
+      --glass-border: rgba(255,255,255,0.06);
+      --muted: rgba(255,255,255,0.6);
+    }/* 浅色主题：通过在 <html> 上设置 data-theme="light" 切换 */
+:root[data-theme='light']{
+  --bg-color: rgba(255,255,255,0.95);
+  --fg-color: #111111;
+  --panel-bg: rgba(255,255,255,0.96);
+  --textarea-bg: rgba(0,0,0,0.03);
+  --glass-border: rgba(0,0,0,0.06);
+  --muted: rgba(0,0,0,0.6);
+}
 
-    body.light {
-      --bg-color: rgba(255,255,255,0.75);
-      --fg-color: #111;
-      --panel-bg: rgba(255, 255, 255, 0.85);
-      --textarea-bg: rgba(255, 255, 255, 0.95);
-      --accent: #66cc99;
-    }
+/* ---------- 基础布局 ---------- */
+*{box-sizing: border-box}
+body{
+  margin: 0;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", Helvetica, Arial, sans-serif;
+  color: var(--fg-color);
+  background: var(--bg-color);
+  transition: background .28s ease, color .28s ease;
+  min-height: 100vh;
+}
 
-    body {
-      margin: 0;
-      padding: 2rem;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: var(--fg-color);
-      background: var(--bg-color);
-      transition: background 0.3s, color 0.3s;
-      position: relative;
-      z-index: 0;
-    }
+/* 背景图层（更稳健的层级与性能考量） */
+body::before{
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url('/img/bg.png');
+  background-size: cover; background-position: center;
+  z-index: -3;
+  filter: blur(10px) brightness(.6);
+  will-change: filter;
+  transition: filter .3s ease;
+}
 
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-image: url('/img/bg.png');
-      background-size: cover;
-      background-position: center;
-      z-index: -2;
-      filter: blur(12px) brightness(0.6);
-    }
+/* 雨层（使用背景位移动画，兼容性与性能更好） */
+.rain{
+  position: fixed; inset: 0; pointer-events: none; z-index: -2; opacity: .35; mix-blend-mode: overlay;
+}
+.rain::before{
+  content: '';
+  position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.06) 0px,
+    rgba(255,255,255,0.06) 1px,
+    transparent 1px,
+    transparent 10px
+  );
+  background-size: 100% 12px;
+  will-change: background-position;
+  animation: rain-move 2.8s linear infinite;
+}
+@keyframes rain-move{ from{ background-position: 0 -100%; } to{ background-position: 0 100%; } }
 
-    body.light::before {
-      filter: blur(12px) brightness(1);
-    }
+/* 容器（提高 z-index 以确保交互正常） */
+.container{
+  position: relative; z-index: 1;
+  max-width: 960px; margin: 2rem auto;
+  background: var(--panel-bg);
+  border-radius: 18px; padding: 2rem;
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  transition: transform .28s ease, box-shadow .28s ease;
+  animation: fade-in .45s ease both;
+}
+@keyframes fade-in{ from{ opacity: 0; transform: translateY(6px);} to{ opacity: 1; transform: none; } }
 
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: var(--panel-bg);
-      border-radius: 20px;
-      padding: 2rem;
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 40px rgba(0, 255, 255, 0.05);
-    }
+h1#typing-title{
+  font-size: 2.1rem; color: var(--accent); text-align: center; margin: .25rem 0 1rem; letter-spacing: .6px;
+  display: inline-block; padding: .2rem .6rem; border-radius: 8px;
+}
 
-    h1 {
-      font-size: 2.2rem;
-      color: var(--accent);
-      text-align: center;
-      margin-bottom: 1rem;
-    }
+.theme-toggle{ text-align: right; margin-bottom: 1rem; }
+.theme-toggle button{
+  background: none; border: 1px solid var(--accent); color: var(--accent);
+  padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: .95rem;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.theme-toggle button:hover{ transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
 
-    .theme-toggle {
-      text-align: right;
-      margin-bottom: 1rem;
-    }
+/* 头像与光环 */
+.avatar-wrap{ text-align:center; margin-bottom: 1rem; }
+.avatar-ring{
+  display: inline-block; padding: 6px; border-radius: 999px;
+  background: linear-gradient(135deg, rgba(102,204,153,0.18), rgba(134,200,170,0.12));
+  transition: background .3s ease, transform .25s ease;
+}
+.avatar-ring:hover{ transform: scale(1.04); }
+img.avatar{ width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display:block; border: 4px solid rgba(255,255,255,0.06); box-shadow: 0 6px 18px rgba(0,0,0,0.28); }
 
-    .theme-toggle button {
-      background: none;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 6px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
+/* 预览区域（markdown 渲染） */
+#preview{
+  background: var(--textarea-bg); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04);
+  line-height: 1.75; font-size: 0.98rem; color: var(--fg-color);
+}
+#preview h1,#preview h2,#preview h3{ color: var(--accent); }
+#preview a{ color: var(--accent); text-decoration: underline; }
+#preview a::before{ content: "🔗"; margin-right: .25em; font-size: .9em; vertical-align: middle; }
 
-    #preview {
-      background: var(--textarea-bg);
-      padding: 1.5rem;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      line-height: 1.7;
-    }
+/* Jelly 效果（用于标题） */
+@keyframes jelly{ 0%{ transform: scale(1);} 30%{ transform: scale(1.18,0.86);} 50%{ transform: scale(.94,1.06);} 70%{ transform: scale(1.04,.96);} 100%{ transform: scale(1);} }
+.jelly{ animation: jelly .62s cubic-bezier(.2,.9,.3,1.2) both; display:inline-block; }
 
-    #preview h1, #preview h2, #preview h3 {
-      color: var(--accent);
-    }
+/* Chart 容器调整 */
+.chart-box{ max-width: 720px; margin: 1.5rem auto 0; }
+canvas{ width:100% !important; height: auto !important; }
 
-    #preview a {
-      color: var(--accent);
-      text-decoration: underline; /* 添加下划线 */
-    }
+/* 响应式 */
+@media (max-width:600px){ body{ padding: 1rem } .container{ padding: 1rem } h1#typing-title{ font-size:1.6rem } img.avatar{ width:96px; height:96px } }
 
-    #preview a::before {
-      content: "🔗";
-      margin-right: 0.25em;
-      font-size: 0.9em;
-      vertical-align: middle;
-    }
+/* 用户偏好：减少动画（无障碍） */
+@media (prefers-reduced-motion: reduce){
+  .rain::before{ animation: none }
+  .jelly{ animation: none }
+  .container{ animation: none }
+}
 
-    img.avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      box-shadow: 0 0 10px rgba(0,0,0,0.4);
-      margin-bottom: 1.5rem;
-    }
-
-    .rain {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    .rain::before {
-      content: "";
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background-image:
-        repeating-linear-gradient(
-          to bottom,
-          rgba(255, 255, 255, 0.07),
-          rgba(255, 255, 255, 0.07) 1px,
-          transparent 1px,
-          transparent 3px
-        );
-      animation: rain-fall 0.5s linear infinite;
-    }
-
-    @keyframes rain-fall {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(100%); }
-    }
-
-    @keyframes jelly {
-      0% { transform: scale(1); }
-      30% { transform: scale(1.2, 0.8); }
-      50% { transform: scale(0.9, 1.1); }
-      70% { transform: scale(1.05, 0.95); }
-      100% { transform: scale(1); }
-    }
-
-    .jelly {
-      animation: jelly 0.5s ease;
-      display: inline-block;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 1rem;
-      }
-      .container {
-        padding: 1rem;
-      }
-    }
   </style>
 </head>
 <body>
-  <div class="rain"></div>
-
-  <div class="container">
+  <div class="rain" aria-hidden="true"></div>  <div class="container">
     <div class="theme-toggle">
-      <button onclick="toggleTheme()">🌓 切换主题</button>
-      <label style="margin-left: 1rem; font-size: 0.9rem;">
-        🎨 主题色：
-        <input type="color" id="colorPicker" value="#66cc99" style="vertical-align: middle;" />
+      <button id="themeToggle">🌓 切换深/浅</button>
+      <label style="margin-left:1rem; font-size:.95rem">🎨 主题色：
+        <input id="colorPicker" type="color" value="#66cc99" style="vertical-align:middle; margin-left:.4rem" />
       </label>
-    </div>
+    </div><h1 id="typing-title">Mogo简介</h1>
 
-    <h1 id="typing-title">Mogo简介</h1>
-
-    <div style="text-align: center;">
-      <img src="/img/hd.jpg"
-           alt="头像" class="avatar">
-    </div>
-
-    <div id="preview"></div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<div style="max-width: 600px; margin: 2rem auto;">
-  <canvas id="stackChart"></canvas>
+<div class="avatar-wrap">
+  <span class="avatar-ring" aria-hidden="true">
+    <img class="avatar" src="/img/hd.jpg" alt="Mogo 头像" />
+  </span>
 </div>
 
-<script>
-const ctx = document.getElementById('stackChart').getContext('2d');
-const chart = new Chart(ctx, {
-  type: 'radar',
-  data: {
-    labels: ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TailwindCSS', 'TypeScript', 'Git', 'Webpack'],
-    datasets: [{
-      label: 'Mogo 技术熟练度',
-      data: [9, 8, 7, 7, 8, 6, 8, 6],
-      backgroundColor: 'rgba(102, 204, 153, 0.2)', // 默认淡绿色
-      borderColor: 'rgba(102, 204, 153, 1)',
-      borderWidth: 2,
-      pointBackgroundColor: 'rgba(102, 204, 153, 1)',
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      r: {
-        angleLines: { display: false },
-        suggestedMin: 0,
-        suggestedMax: 10,
-        ticks: {
-          stepSize: 2,
-          backdropColor: 'transparent',
-          color: getComputedStyle(document.documentElement).getPropertyValue('--fg-color')
-        },
-        pointLabels: {
-          color: getComputedStyle(document.documentElement).getPropertyValue('--fg-color')
-        },
-        grid: {
-          color: 'rgba(200,200,200,0.2)'
-        }
-      }
-    },
-    plugins: {
-      legend: {
-        labels: {
-          color: getComputedStyle(document.documentElement).getPropertyValue('--fg-color')
-        }
-      }
-    }
-  }
-});
-                        </script>
-  <script>
-    const preview = document.getElementById('preview');
+<div id="preview" aria-live="polite"></div>
+
+<div class="chart-box">
+  <canvas id="stackChart" aria-label="技术熟练度图"></canvas>
+</div>
+
+  </div>  <!-- external libs -->  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <script>
+    // ---------- 页面数据 ----------
     const markdownContent = `
 ## Momo Traceの简介
 [Moxan网站集](https://nev.moxan.top)
@@ -268,66 +183,135 @@ const chart = new Chart(ctx, {
 5. [github](https://github.com/momotrace)
 `;
 
-    function renderMarkdown() {
+    document.addEventListener('DOMContentLoaded', () => {
+      // 渲染 markdown
+      const preview = document.getElementById('preview');
       preview.innerHTML = marked.parse(markdownContent);
-    }
 
-    renderMarkdown();
+      // ---------- 主题与主色处理（统一使用 html[data-theme]) ----------
+      const htmlEl = document.documentElement;
+      const savedTheme = localStorage.getItem('mogo-theme');
+      if (savedTheme === 'light') htmlEl.setAttribute('data-theme','light');
 
-    function toggleTheme() {
-      const isLight = document.body.classList.toggle('light');
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
-    }
+      const themeToggle = document.getElementById('themeToggle');
+      themeToggle.addEventListener('click', () => {
+        if (htmlEl.getAttribute('data-theme') === 'light'){
+          htmlEl.removeAttribute('data-theme');
+          localStorage.setItem('mogo-theme','dark');
+        } else {
+          htmlEl.setAttribute('data-theme','light');
+          localStorage.setItem('mogo-theme','light');
+        }
+        // 主题变更后更新 chart 颜色
+        updateChartColors();
+      });
 
-    function applyInitialTheme() {
-      const saved = localStorage.getItem('theme');
-      if (saved === 'light') {
-        document.body.classList.add('light');
-      } else if (saved === 'dark') {
-        document.body.classList.remove('light');
+      // 主题色选择器
+      const colorPicker = document.getElementById('colorPicker');
+      const savedAccent = localStorage.getItem('mogo-accent');
+      if (savedAccent){
+        document.documentElement.style.setProperty('--accent', savedAccent);
+        colorPicker.value = savedAccent;
       } else {
-        const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-        if (prefersLight) document.body.classList.add('light');
+        // 保证 CSS 变量在根上也有默认值
+        const defaultAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#66cc99';
+        colorPicker.value = defaultAccent;
       }
-    }
 
-    applyInitialTheme();
+      colorPicker.addEventListener('input', (e) => {
+        const color = e.target.value;
+        document.documentElement.style.setProperty('--accent', color);
+        localStorage.setItem('mogo-accent', color);
+        updateChartColors();
+      });
 
-    const titleEl = document.getElementById('typing-title');
-    const fullText = 'Mogo简介';
-    let index = 0;
-
-    function typeWriter() {
-      if (index <= fullText.length) {
-        titleEl.textContent = fullText.slice(0, index++);
-        titleEl.classList.remove('jelly');
-        void titleEl.offsetWidth;
-        titleEl.classList.add('jelly');
-        setTimeout(typeWriter, 150);
+      // ---------- 标题打字机 + 果冻效果 ----------
+      const titleEl = document.getElementById('typing-title');
+      const fullText = 'Mogo简介';
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        titleEl.textContent = fullText;
+      } else {
+        let i = 0;
+        const speed = 80;
+        const timer = setInterval(() => {
+          titleEl.textContent = fullText.slice(0, i++);
+          // 触发果冻动画
+          titleEl.classList.remove('jelly');
+          void titleEl.offsetWidth;
+          titleEl.classList.add('jelly');
+          if (i > fullText.length) clearInterval(timer);
+        }, speed);
       }
-    }
 
-    setTimeout(typeWriter, 300);
+      // ---------- Chart.js 初始化与实时颜色更新 ----------
+      const ctx = document.getElementById('stackChart').getContext('2d');
+      let stackChart = null;
+      const labels = ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TailwindCSS', 'TypeScript', 'Git', 'Webpack'];
+      const dataValues = [9,8,7,7,8,6,8,6];
 
-    const colorPicker = document.getElementById('colorPicker');
-    const rootStyle = document.documentElement.style;
+      function hexToRgba(hex, alpha){
+        const h = hex.replace('#','');
+        const bigint = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
 
-    function setAccent(color) {
-      rootStyle.setProperty('--accent', color);
-      localStorage.setItem('accent', color);
-    }
+      function createChart(){
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#66cc99';
+        const fg = getComputedStyle(document.documentElement).getPropertyValue('--fg-color').trim() || '#f1f1f1';
 
-    const savedAccent = localStorage.getItem('accent');
-    if (savedAccent) {
-      colorPicker.value = savedAccent;
-      setAccent(savedAccent);
-    }
+        if (stackChart) stackChart.destroy();
 
-    colorPicker.addEventListener('input', (e) => {
-      setAccent(e.target.value);
-    });
-  </script>
-  <div id="xf-MusicPlayer" data-cdnName="https://player.xfyun.club/js"  data-themeColor="xf-darkGreen" data-songList="8170701761"data-memory="1"></div>
-<script src="/music.min.js"></script>
-</body>
+        stackChart = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Mogo 技术熟练度',
+              data: dataValues,
+              backgroundColor: hexToRgba(accent, 0.16),
+              borderColor: accent,
+              borderWidth: 2,
+              pointBackgroundColor: accent
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                angleLines: { display: false },
+                suggestedMin: 0,
+                suggestedMax: 10,
+                ticks: { stepSize: 2, backdropColor: 'transparent', color: fg },
+                pointLabels: { color: fg },
+                grid: { color: 'rgba(200,200,200,0.12)' }
+              }
+            },
+            plugins: {
+              legend: { labels: { color: fg } }
+            }
+          }
+        });
+      }
+
+      function updateChartColors(){ createChart(); }
+
+      // 首次 init
+      createChart();
+
+      // 保证 canvas 在窗口尺寸变化后正确绘制
+      window.addEventListener('resize', () => { if (stackChart) stackChart.resize(); });
+
+      // ---------- 小提示：如果 music.min.js 丢失，显示替代链接 ----------
+      const musicDiv = document.createElement('div');
+      musicDiv.style.marginTop = '1rem';
+      musicDiv.innerHTML = `<small style="color:var(--muted)">音乐播放器：若页面中未加载第三方播放器，请访问 <a href="https://music.163.com/#/playlist?id=8170701761" target="_blank">网易云歌单</a></small>`;
+      document.querySelector('.container').appendChild(musicDiv);
+
+    }); // DOMContentLoaded end
+  </script></body>
 </html>
